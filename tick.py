@@ -34,14 +34,17 @@ import composer
 log = logging.getLogger("vera.tick")
 
 MAX_ACTIONS = 20
-# Raised from 8.0/6.0: the sole configured LLM (OpenCode Zen / DeepSeek V4.1 Flash, a reasoning model) measured
-# ~18s average latency (7-41s range) in this session's live validation, so the old 6-8s budget meant almost every
-# draft timed out to the deterministic fallback before the LLM could answer. 26s/22s stay under the challenge's
-# 30s hard limit (testing-brief/brief) with a real margin, while covering most of that model's latency distribution.
-# The remaining risk: the model's own tail (measured max 40.69s in one run) will still time out to fallback -
-# safe, just plainer, never a crash or an actual >30s response.
-TICK_BUDGET_SECONDS = 26.0
-COMPOSE_TIMEOUT_SECONDS = 22.0
+# CORRECTED: the official judge_simulator.py's own BotClient calls /v1/tick and /v1/reply with a hard 15s CLIENT
+# timeout (judge_simulator.py: self._request("POST", "/v1/tick", 15, ...) / "/v1/reply", 15). That is the real
+# ceiling, not the brief's 30s "hard limit" text - a response after 15s never reaches the judge at all. The sole
+# configured LLM (OpenCode Zen / DeepSeek V4.1 Flash) measured ~18s average latency (median ~14.6s, 7-41s range),
+# so it cannot be made to reliably answer within 15s no matter how these numbers are tuned; raising them close to
+# 15s would just as often cause the judge's OWN client to time out (worse than a fast, safe deterministic
+# fallback). 12s/10s below leaves real margin for network latency while still letting the faster half of this
+# model's typical calls (median ~14.6s measured with no per-attempt cap) complete more often than the previous
+# 8.0/6.0 did.
+TICK_BUDGET_SECONDS = 12.0
+COMPOSE_TIMEOUT_SECONDS = 10.0
 MAX_WORKERS = 6
 
 
