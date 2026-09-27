@@ -1,0 +1,5 @@
+fastapi>=0.110
+uvicorn>=0.29
+requests>=2.31
+# httpx is only needed by the tests (FastAPI TestClient)
+httpx>=0.27
