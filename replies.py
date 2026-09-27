@@ -30,7 +30,9 @@ import llm
 import validator
 from prompts import REPLY_SYSTEM_PROMPT
 
-REPLY_BUDGET_SECONDS = 6.5
+# Raised from 6.5: see tick.py's comment on TICK_BUDGET_SECONDS/COMPOSE_TIMEOUT_SECONDS - same reasoning-model
+# latency reality, same 30s-hard-limit margin.
+REPLY_BUDGET_SECONDS = 22.0
 QUALIFYING_RE = re.compile(r"\b(would you|do you|can you tell|what if|how about)\b", re.I)
 
 # ------------------------------------------------------------------ message classification
@@ -194,7 +196,7 @@ def _llm_reply(ctx: dict, mode: str, sender: str, off_topic: bool, category: dic
             # reasoning model's hidden reasoning tokens), not the requested reply length (20-60 words, rule 6 in
             # REPLY_SYSTEM_PROMPT), which validator.py still enforces independently.
             obj, _provider = llm.chat_json([{"role": "system", "content": REPLY_SYSTEM_PROMPT}, {"role": "user", "content": user}],
-                                           max_tokens=900, timeout=min(remaining, 6.0))
+                                           max_tokens=900, timeout=min(remaining, 20.0))
         except llm.LLMUnavailable:
             return None
         body = str(obj.get("body", "")).strip()

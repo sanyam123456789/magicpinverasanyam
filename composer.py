@@ -287,7 +287,10 @@ def compose_detailed(category: dict, merchant: dict, trigger: dict, customer: di
             # writing the JSON body, so a low ceiling here starves them (finish_reason "length", empty content) even
             # though the actual WhatsApp message stays short. The APPLICATION-level brevity ask (35-75 words, rule 15
             # in SYSTEM_PROMPT) and enforcement (validator.py "too_long" soft check) are unchanged by this number.
-            candidate, provider = llm.chat_json(build_messages(ctx, feedback), max_tokens=1500, timeout=min(remaining, 6.0))
+            # min(remaining, 22.0): 22.0 matches tick.COMPOSE_TIMEOUT_SECONDS (the current sole provider needs real
+            # time to answer); `remaining` (shrinking across the 2 attempts) is what actually keeps the TOTAL call
+            # under the caller's own timeout budget and, transitively, under the challenge's 30s hard limit.
+            candidate, provider = llm.chat_json(build_messages(ctx, feedback), max_tokens=1500, timeout=min(remaining, 22.0))
         except llm.LLMUnavailable as exc:
             issues.append(f"llm_unavailable: {exc}")
             transient = True

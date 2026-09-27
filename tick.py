@@ -34,8 +34,14 @@ import composer
 log = logging.getLogger("vera.tick")
 
 MAX_ACTIONS = 20
-TICK_BUDGET_SECONDS = 8.0
-COMPOSE_TIMEOUT_SECONDS = 6.0
+# Raised from 8.0/6.0: the sole configured LLM (OpenCode Zen / DeepSeek V4.1 Flash, a reasoning model) measured
+# ~18s average latency (7-41s range) in this session's live validation, so the old 6-8s budget meant almost every
+# draft timed out to the deterministic fallback before the LLM could answer. 26s/22s stay under the challenge's
+# 30s hard limit (testing-brief/brief) with a real margin, while covering most of that model's latency distribution.
+# The remaining risk: the model's own tail (measured max 40.69s in one run) will still time out to fallback -
+# safe, just plainer, never a crash or an actual >30s response.
+TICK_BUDGET_SECONDS = 26.0
+COMPOSE_TIMEOUT_SECONDS = 22.0
 MAX_WORKERS = 6
 
 
